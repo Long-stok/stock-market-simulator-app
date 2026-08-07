@@ -28,7 +28,7 @@ jobs:
             python3-pip \
             autoconf automake libtool pkg-config \
             zlib1g-dev libncurses5-dev libncursesw5-dev \
-            libtinfo5 cmake libffi-dev libssl-dev expect
+            libtinfo5 cmake libffi-dev libssl-dev
 
       - name: Install Buildozer & Cython
         run: |
@@ -40,18 +40,8 @@ jobs:
         run: |
           mkdir -p ~/.android
           touch ~/.android/repositories.cfg
-          
-          expect -c '
-          set timeout -1
-          spawn buildozer -v android debug
-          expect {
-              "License" { send "y\r"; exp_continue }
-              "Accept?" { send "y\r"; exp_continue }
-              "y/N"     { send "y\r"; exp_continue }
-              "Do you accept" { send "y\r"; exp_continue }
-              eof
-          }
-          '
+          # Tự động đồng ý mọi câu hỏi License của Android SDK
+          yes | buildozer -v android debug
 
       - name: Copy APK to Output
         run: |
