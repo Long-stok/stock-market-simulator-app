@@ -26,8 +26,18 @@ jobs:
 
     - name: Build APK
       run: |
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-        buildozer --non-interactive android debug
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        expect -c '
+        set timeout -1
+        spawn buildozer -v android debug
+        expect {
+            "License" { send "y\r"; exp_continue }
+            "Accept?" { send "y\r"; exp_continue }
+            "y/N"     { send "y\r"; exp_continue }
+            eof
+        }
+        '
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
