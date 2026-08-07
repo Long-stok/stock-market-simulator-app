@@ -38,9 +38,14 @@ jobs:
             eof
         }
         '
+        # Gom tất cả file apk tìm được ra ngoài thư mục gốc gốc
+        mkdir -p output_apk
+        find . -name "*.apk" -exec cp {} output_apk/ \;
+        ls -la output_apk/
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: LongStock-APK
-        path: '**/*.apk'
+        path: output_apk/*.apk
+        if-no-files-found: error
