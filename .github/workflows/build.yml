@@ -26,9 +26,9 @@ jobs:
 
     - name: Build APK with Buildozer
       run: |
-        buildozer android debug
+        ~/.local/bin/buildozer -v android debug
 
-    - name: Upload APK Artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: LongStock-APK
