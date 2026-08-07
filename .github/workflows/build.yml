@@ -36,6 +36,23 @@ jobs:
           pip install buildozer
           pip install "cython==0.29.34"
 
+      - name: Download Android SDK and accept licenses
+        run: |
+          buildozer android debug || true
+
+          SDKMANAGER=$(find "$HOME/.buildozer" -name sdkmanager -type f | head -n 1)
+
+          echo "SDKMANAGER=$SDKMANAGER"
+
+          if [ -z "$SDKMANAGER" ]; then
+            echo "Không tìm thấy sdkmanager"
+            exit 1
+          fi
+
+          yes | "$SDKMANAGER" --licenses || true
+
+          "$SDKMANAGER" "build-tools;37.0.0"
+
       - name: Build APK
         run: |
           buildozer -v android debug
