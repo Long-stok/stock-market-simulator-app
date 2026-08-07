@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ main, master, chu_yeu ]
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -24,9 +24,9 @@ jobs:
         sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
         pip install --upgrade pip setuptools buildozer cython
 
-    - name: Build APK with Buildozer
+    - name: Build APK
       run: |
-        ~/.local/bin/buildozer -v android debug
+        yes | buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
