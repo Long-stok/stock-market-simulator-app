@@ -22,15 +22,27 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev expect
-        pip install --upgrade pip setuptools "buildozer>=1.5.0" cython
+        pip install --upgrade pip setuptools buildozer cython
 
-    - name: Build APK with Buildozer
+    - name: Accept Android SDK Licenses & Build APK
       run: |
         mkdir -p ~/.android
         touch ~/.android/repositories.cfg
-        yes | buildozer -v android debug
+        
+        # Tự động chấp nhận toàn bộ SDK License
+        expect -c '
+        set timeout -1
+        spawn buildozer -v android debug
+        expect {
+            "License" { send "y\r"; exp_continue }
+            "Accept?" { send "y\r"; exp_continue }
+            "y/N"     { send "y\r"; exp_continue }
+            "Do you accept" { send "y\r"; exp_continue }
+            eof
+        }
+        '
 
-    - name: Check APK location
+    - name: Copy APK to Output
       run: |
         mkdir -p output_apk
         find . -name "*.apk" -exec cp {} output_apk/ \;
@@ -39,6 +51,6 @@ jobs:
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: LongStock-APK
+        name: StockMarketSimulation-APK
         path: output_apk/*.apk
         if-no-files-found: error
