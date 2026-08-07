@@ -9,16 +9,16 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Build APK with Buildozer Action
-        uses: subzerolib/buildozer-action@v1.3
+      - name: Build APK with Buildozer
+        uses: akshayaurora/buildozer-action@v1
         with:
-          workdir: .
+          command: buildozer -v android debug
           buildozer_version: master
 
       - name: Upload APK
