@@ -1,106 +1,31 @@
-name: Build APK
+name: Build Android APK
 
 on:
-  workflow_dispatch:
-    inputs:
-      buildType:
-        type: choice
-        required: true
-        default: "debug"
-        description: "Build Type"
-        options:
-        - "debug"
-        - "staging"
-        - "release"
-        - "ghRelease"
-      release:
-        type: boolean
-        description: "Release built APKs"
-      tag:
-        type: string
-        description: "Tag for the release"
+  push:
+    branches: [ main ]
+  workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          submodules: true
+          python-version: '3.11'
 
-      - name: Setup environment
-        working-directory: ./app
-        env:
-          ENCODED_STRING: ${{ secrets.KEYSTORE }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y autopoint
-          sudo mkdir -p /data /home/builder
-          sudo chown $USER:$USER /data /home/builder
-          echo $ENCODED_STRING | base64 --decode > keystore.jks
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
+      - name: Build APK with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
         with:
-          cache: "gradle"
-          java-version: "17"
-          distribution: "temurin"
+          command: buildozer android debug
+          repository_root: .
 
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-
-      - name: Build APK
-        env:
-          BUILD_TYPE: ${{ github.event.inputs.buildType }}
-          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        run: |
-          if [ "$BUILD_TYPE" = "release" ]; then
-            ./gradlew assembleRelease
-            mv app/build/outputs/apk/release/*.apk .
-          elif [ "$BUILD_TYPE" = "ghRelease" ]; then
-            ./gradlew assembleGithubRelease
-            mv app/build/outputs/apk/githubRelease/*.apk .
-          elif [ "$BUILD_TYPE" = "staging" ]; then
-            ./gradlew assembleDebug -PtargetABI=arm64-v8a
-            mv app/build/outputs/apk/debug/*.apk .
-          elif [ "$BUILD_TYPE" = "debug" ]; then
-            ./gradlew assembleDebug
-            mv app/build/outputs/apk/debug/*.apk .
-          fi
-
-      - name: Upload APK artifact
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Build output
-          path: ./*.apk
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event.inputs.buildType == 'ghRelease' && github.event.inputs.release == 'true' && startsWith(github.event.inputs.tag, 'v')
-
-    steps:
-      - name: Clone repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Fetch APKs
-        uses: actions/download-artifact@v4
-        with:
-          path: ./
-          merge-multiple: true
-
-      - name: Create new tag
-        run: |
-          git tag "${{ github.event.inputs.tag }}"
-          git push --tags
-
-      - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          draft: true
-          files: "*.apk"
-          generate_release_notes: true
+          name: android-debug-apk
+          path: bin/*.apk
